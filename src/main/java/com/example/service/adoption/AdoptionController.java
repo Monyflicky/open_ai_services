@@ -1,27 +1,41 @@
 package com.example.service.adoption;
-
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.repository.ListCrudRepository;
+import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
 @Controller
 @ResponseBody
+@Transactional
 public class AdoptionController {
     private final DogRepository repository;
+
     @Autowired
-    private final ChatClient chatClient;
-    public AdoptionController(DogRepository repository, ChatClient chatClient){
+    //private final ChatClient chatClient;
+
+
+
+    private final ApplicationEventPublisher publisher;
+    public AdoptionController(DogRepository repository, ApplicationEventPublisher publisher){
         this.repository = repository;
-        this.chatClient = chatClient;
+        this.publisher = publisher;
+
     }
 
     @RequestMapping("/aii")
-    public String printString(){
+    public String printString() {
         return "hello";
     }
+
     @RequestMapping("/reader/{num}")
     void read(@PathVariable int num){
         System.out.println(num);
@@ -34,6 +48,7 @@ public class AdoptionController {
                      var nDog = new Dog(dog.id(), dog.name(), dog.breed(), dog.age());
                      var adopted = this.repository.save(nDog);
                      System.out.println("adopted [" + adopted + "]");
+                     this.publisher.publishEvent(new DogAdoptedEvent(dogId));
                  });
 
      }
@@ -45,34 +60,11 @@ public class AdoptionController {
     // - smart switch expressions
     // name + tuple = record, sequence of typed data in a bucket
 
-    //no lombok
+   public record DogAdoptedEvent(int godId){
 
-    /*class Loans {
-        String displayMessageFor(Loan loan){
-            // var message = "";
-
-            return switch (loan) {
-                case UnSecuredLoan(var interest) -> "ouch. that " + interest + "% is going to hurt";
-                case SecuredLoan sl -> "hey. good job. well done. you got a good loan";
-            };
-
-             var message = "";
-             if(loan instanceof SecuredLoan){
-                 message = "hey. good job. well done. you got a good loan";
-             }
-
-             if(loan instanceof UnSecuredLoan(var interest)){
-                 //var usl = (UnSecuredLoan) loan;
-                 message = "ouch. that " + interest + "% is going to hurt";
-             }
-        }
-    }
-
-    sealed interface Loan permits SecuredLoan, UnSecuredLoan{}
-
-    final class SecuredLoan implements Loan{}
-
-    record UnSecuredLoan(float interest) implements Loan{}*/
+   }
 
 }
+
+
 
